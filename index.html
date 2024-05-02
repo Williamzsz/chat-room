@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat</title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh; /* Mengisi tinggi layar penuh */
+      margin: 0;
+      background-color: grey; /* Latar belakang hitam */
+      color: white; /* Warna teks putih */
+    }
+    #messages {
+      list-style-type: none;
+      padding: 0;
+      width: 100%; /* Lebar maksimal pesan */
+    }
+    .message {
+      display: inline-block; /* Menyesuaikan ukuran kotak dengan teks */
+      background-color: #ccc; /* Warna abu-abu */
+      padding: 10px; /* Padding kotak pesan */
+      margin-bottom: 10px; /* Jarak antara pesan */
+      border-radius: 5px; /* Border radius */
+    }
+    .other .message {
+      text-align: left; /* Pesan dari orang lain di kiri */
+    }
+    .me .message {
+      text-align: right; /* Pesan dari Anda di kanan */
+    }
+    #form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+    }
+    #input {
+      width: 100%; /* Mengisi sisa ruang */
+      margin-bottom: 10px; /* Jarak antara input dan tombol */
+      padding: 10px; /* Padding kotak input */
+      border-radius: 5px; /* Border radius */
+    }
+    button {
+      background-color: purple; /* Warna ungu */
+      color: white; /* Warna teks putih */
+      border: none; /* Hilangkan border */
+      padding: 10px 20px; /* Padding tombol */
+      border-radius: 5px; /* Border radius */
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0); /* Shadow glow ungu */
+    }
+  </style>
+</head>
+<body>
+  <p>Mari kita saling bully hehee</p>
+  <ul id="messages"></ul>
+  <form id="form" action="">
+    <textarea id="input" autocomplete="off" rows="3" placeholder="Ketik pesan lu disini ya jing :"></textarea> <!-- Textarea untuk pesan teks -->
+    <button type="submit">Send</button>
+  </form>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.2.0/socket.io.js"></script>
+  <script>
+    const socket = io();
+    const username = prompt('MASUKIN NAMA LU , NAMA FAKE GA DI AJAK KONTOL:'); // Meminta pengguna untuk memasukkan nama
+    let lastMessage = '';
+
+    // Mengirim pesan saat form disubmit
+    document.getElementById('form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const input = document.getElementById('input');
+      const message = input.value.trim(); // Trim pesan untuk menghapus spasi di awal dan akhir
+
+      if (message && message !== lastMessage) {
+        addMessageToUI(username, message); // Menambahkan pesan ke UI
+
+        // Memeriksa pesan untuk auto reply
+        if (message.toLowerCase().includes('halo')) {
+          const reply = `Halo, ${username}! Apa kabar?`;
+          addMessageToUI('Bot', reply); // Menambahkan pesan balasan dari bot ke UI
+        }
+
+        socket.emit('chat message', { message: message, username: username }); // Mengirim pesan dan nama pengirim
+        lastMessage = message;
+        input.value = '';
+      }
+    });
+
+    // Menerima pesan dari server dan menambahkannya ke daftar pesan
+    socket.on('chat message', function(data) {
+      if (data.message !== lastMessage) {
+        addMessageToUI(data.username, data.message);
+      }
+    });
+
+    // Fungsi untuk menambahkan pesan ke UI
+    function addMessageToUI(username, message) {
+      const item = document.createElement('li');
+      item.classList.add(username === 'Bot' ? 'other' : 'me'); // Menambahkan kelas "other" atau "me" sesuai dengan pengirim pesan
+      const messageBox = document.createElement('div');
+      messageBox.textContent = `${username}: ${message}`; // Menampilkan nama pengirim dan teks pesan
+      messageBox.classList.add('message');
+
+      item.appendChild(messageBox);
+      document.getElementById('messages').appendChild(item);
+    }
+  </script>
+</body>
+</html>
